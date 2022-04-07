@@ -2,6 +2,8 @@
 const gallery = document.querySelector("#gallery");
 const body = document.querySelector("body");
 const modalClose = document.querySelector(".modal-close-btn");
+const searchDiv = document.querySelector(".search-container");
+
 const url = 'https://randomuser.me/api/?results=12&nat=us';
 
 
@@ -11,8 +13,29 @@ let employees = [];
 /*   functions   */
 
 
+/** 
+  * Creates a search bar and adds it to the HTML
+  */
+function displaySearchBar() {
+    const searchBarHTML = `
+        <form action="#" method="get">
+            <input type="search" id="search-input" class="search-input" placeholder="Search...">
+            <input type="submit" value="&#x1F50D;" id="search-submit" class="search-submit">
+        </form>`;
+
+    searchDiv.insertAdjacentHTML("beforeend", searchBarHTML);
+}
+
+displaySearchBar();
+
+const search = document.querySelector(".search-input");
+
+
+/** 
+  * Takes an array and creates the HTML for all employees
+  * @param  {array}  data - array of random users
+  */
 function displayEmployees(data) {
-    console.log(data);
     employees = data;
     let employeesHTML = '';
     for (let i = 0; i < employees.length; i++) {
@@ -24,7 +47,7 @@ function displayEmployees(data) {
         let img = employees[i].picture.large;
 
         employeesHTML += `
-        <div class="card" id=${i}>
+        <div class="card ${firstName} ${lastName}" id=${i}>
             <div class="card-img-container">
                 <img class="card-img" src="${img}" alt="profile picture">
             </div>
@@ -40,6 +63,10 @@ function displayEmployees(data) {
 }
 
 
+/** 
+  * Creates the modal window
+  * @param  {integer}  index - index of the clicked card
+  */
 function displayModal(index) {
     let img = employees[index].picture.large;
     let name = employees[index].name;
@@ -50,7 +77,7 @@ function displayModal(index) {
     
     let date = new Date(dob.date);
 
-    const modalHtml = `
+    const modalHTML = `
         <div class="modal-container  ${index}">
             <div class="modal">
                 <button type="button" id="modal-close-btn" class="modal-close-btn"><strong class="modal-close-btn-x">X</strong></button>
@@ -72,12 +99,32 @@ function displayModal(index) {
         </div>`;
     
 
-    gallery.insertAdjacentHTML("beforeend", modalHtml);
+    gallery.insertAdjacentHTML("beforeend", modalHTML);
+}
+
+
+/** 
+  * Hides or shows the cards depending on the search
+  * @param  {string}  searchValue - value of the search input
+  */
+function handleSearch(searchValue) {
+    const cards = document.querySelectorAll(".card");
+    for (let i = 0; i < cards.length; i++) {
+        let className = cards[i].className.toLocaleLowerCase();
+        className = className.replace("card", "");
+        if (className.includes(searchValue)) {
+            cards[i].style.display = "flex";
+        } else {
+            cards[i].style.display = "none";
+        }
+    }
 }
 
 
 /*   fetch   */
 
+
+// fetch the data and calls the displayEmployee function giving the data as argument
 
 fetch(url)
     .then(res => res.json())
@@ -87,47 +134,29 @@ fetch(url)
 
 
 
+/*   event listeners   */
 
-
-
-
-/* gallery.addEventListener('click', e => {
-    const modal = document.querySelector(".modal-container");
-    console.log(modal);
-    if (e.target !== gallery && e.target !== modal) {
-        if (e.target !== modal.children) {
-            console.log(modal.children)
-        }
-        const card = e.target.closest('.card');
-        const index = card.id;
-        console.log(index);
-        displayModal(index);
-    }
-})
-
-
-modalClose.addEventListener("click", () => {
-    console.log("yo")
-}) */
 
 body.addEventListener("click", e => {
+
+    // calls displayModal
     if (e.target.className.includes("card")) {
         const card = e.target.closest('.card');
         const index = card.id;
-        console.log(index);
         displayModal(index);
     }
 
+    // closes modal window
     if (e.target.className.includes("modal-close-btn")) {
         document.querySelector(".modal-container").remove();
     }
 
+    // prev button
     if (e.target.className === "modal-prev btn") {
         const modal = document.querySelector(".modal-container");
         let index = modal.className.replace('modal-container ', '');
         modal.remove();
         if (index === " 0") {
-            console.log(index)
             const newIndex = 11;
             displayModal(newIndex);
         } else {
@@ -137,12 +166,12 @@ body.addEventListener("click", e => {
         }
     }
 
+    // next button
     if (e.target.className === "modal-next btn") {
         const modal = document.querySelector(".modal-container");
         let index = modal.className.replace('modal-container ', '');
         modal.remove();
         if (index === " 11") {
-            console.log(index)
             const newIndex = 0;
             modal.remove();
             displayModal(newIndex);
@@ -153,4 +182,9 @@ body.addEventListener("click", e => {
             displayModal(newIndex);
         }
     }
+})
+
+
+search.addEventListener("keyup", e => {
+    handleSearch(e.target.value.toLowerCase());
 })
